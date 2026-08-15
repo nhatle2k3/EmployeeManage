@@ -360,10 +360,16 @@ async function main() {
   await prisma.attendanceNetwork.createMany({
     data: [
       {
-        name: 'Office HCM City',
-        cidr: '192.168.10.0/24',
+        name: 'Office HCM City (Main Wi-Fi)',
+        cidr: '192.168.1.0/24',
         location: 'Ho Chi Minh City HQ',
         description: 'Main corporate Wi-Fi and ethernet subnet',
+      },
+      {
+        name: 'Office LAN 192.168.x.x Subnet',
+        cidr: '192.168.0.0/16',
+        location: 'Corporate Internal LAN',
+        description: 'Company internal LAN network range',
       },
       {
         name: 'Office Hanoi Branch',

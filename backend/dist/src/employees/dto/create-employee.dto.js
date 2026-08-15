@@ -116,4 +116,10 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateEmployeeDto.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: client_1.RoleEnum, default: client_1.RoleEnum.EMPLOYEE }),
+    (0, class_validator_1.IsEnum)(client_1.RoleEnum),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateEmployeeDto.prototype, "role", void 0);
 //# sourceMappingURL=create-employee.dto.js.map

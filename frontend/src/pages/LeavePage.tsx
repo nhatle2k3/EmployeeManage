@@ -6,8 +6,11 @@ import { Modal } from '../components/common/Modal';
 import { useAuth } from '../context/AuthContext';
 import { CalendarDays, Plus, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 
+import { useRealtime } from '../context/RealtimeContext';
+
 export const LeavePage: React.FC = () => {
   const { user } = useAuth();
+  const { lastEvent } = useRealtime();
   const [types, setTypes] = useState<LeaveType[]>([]);
   const [balances, setBalances] = useState<LeaveBalance[]>([]);
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
@@ -37,6 +40,12 @@ export const LeavePage: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (lastEvent && (lastEvent.type === 'LEAVE_REQUEST' || lastEvent.type === 'LEAVE_PROCESSED' || lastEvent.type === 'NOTIFICATION')) {
+      fetchData();
+    }
+  }, [lastEvent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

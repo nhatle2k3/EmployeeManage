@@ -3,7 +3,10 @@ import { api } from '../services/api';
 import { Badge } from '../components/common/Badge';
 import { Clock, Wifi, ShieldAlert, CheckCircle2, XCircle, LogIn, LogOut, Smartphone, AlertOctagon } from 'lucide-react';
 
+import { useRealtime } from '../context/RealtimeContext';
+
 export const EmployeeAttendancePage: React.FC = () => {
+  const { lastEvent } = useRealtime();
   const [statusData, setStatusData] = useState<any>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [loading, setLoading] = useState(true);
@@ -28,6 +31,12 @@ export const EmployeeAttendancePage: React.FC = () => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (lastEvent && (lastEvent.type === 'ATTENDANCE_CHECKIN' || lastEvent.type === 'ATTENDANCE_CHECKOUT')) {
+      fetchTodayStatus();
+    }
+  }, [lastEvent]);
 
   const handleCheckIn = async () => {
     setActionLoading(true);

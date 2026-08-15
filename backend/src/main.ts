@@ -9,9 +9,9 @@ async function bootstrap() {
   // Global prefix
   app.setGlobalPrefix('api/v1');
 
-  // CORS configuration
+  // CORS configuration for local LAN & production
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: true, // Allow dynamic origins (localhost, 192.168.x.x LAN IPs, etc.)
     credentials: true,
   });
 

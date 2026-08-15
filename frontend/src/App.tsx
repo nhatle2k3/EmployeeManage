@@ -30,13 +30,16 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
+import { RealtimeProvider } from './context/RealtimeContext';
+
 export const App: React.FC = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
+        <RealtimeProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
 
             <Route
               path="/"
@@ -68,9 +71,10 @@ export const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
-  );
+      </RealtimeProvider>
+    </AuthProvider>
+  </ThemeProvider>
+);
 };
 
 export default App;

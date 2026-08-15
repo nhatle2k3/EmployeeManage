@@ -1,8 +1,12 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { StatusWorkflow } from '@prisma/client';
+import { EventsService } from '../events/events.service';
+import { NotificationsService } from '../notifications/notifications.service';
 export declare class OvertimeService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private eventsService;
+    private notificationsService;
+    constructor(prisma: PrismaService, eventsService: EventsService, notificationsService: NotificationsService);
     submitRequest(employeeId: string, data: {
         date: string;
         startTime: string;
@@ -10,6 +14,29 @@ export declare class OvertimeService {
         hours: number;
         reason: string;
     }): Promise<{
+        employee: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            managerId: string | null;
+            departmentId: string | null;
+            employeeCode: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+            phone: string | null;
+            gender: string | null;
+            dob: Date | null;
+            address: string | null;
+            nationalId: string | null;
+            taxId: string | null;
+            bankAccount: string | null;
+            bankName: string | null;
+            hireDate: Date;
+            status: import(".prisma/client").$Enums.EmploymentStatus;
+            positionId: string | null;
+        };
+    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;

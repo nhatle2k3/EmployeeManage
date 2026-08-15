@@ -1,7 +1,9 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { EventsService } from '../events/events.service';
 export declare class NotificationsService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private eventsService;
+    constructor(prisma: PrismaService, eventsService: EventsService);
     findMyNotifications(userId: string): Promise<{
         id: string;
         createdAt: Date;

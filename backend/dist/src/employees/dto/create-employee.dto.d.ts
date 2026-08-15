@@ -1,4 +1,4 @@
-import { EmploymentStatus } from '@prisma/client';
+import { EmploymentStatus, RoleEnum } from '@prisma/client';
 export declare class CreateEmployeeDto {
     employeeCode: string;
     firstName: string;
@@ -17,4 +17,5 @@ export declare class CreateEmployeeDto {
     managerId?: string;
     hireDate?: string;
     status?: EmploymentStatus;
+    role?: RoleEnum;
 }

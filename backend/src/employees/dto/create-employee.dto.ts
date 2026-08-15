@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { EmploymentStatus } from '@prisma/client';
+import { EmploymentStatus, RoleEnum } from '@prisma/client';
 
 export class CreateEmployeeDto {
   @ApiProperty({ example: 'EMP005' })
@@ -85,4 +85,9 @@ export class CreateEmployeeDto {
   @IsEnum(EmploymentStatus)
   @IsOptional()
   status?: EmploymentStatus;
+
+  @ApiPropertyOptional({ enum: RoleEnum, default: RoleEnum.EMPLOYEE })
+  @IsEnum(RoleEnum)
+  @IsOptional()
+  role?: RoleEnum;
 }

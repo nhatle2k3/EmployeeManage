@@ -23,6 +23,9 @@ const payroll_module_1 = require("./payroll/payroll.module");
 const reports_module_1 = require("./reports/reports.module");
 const notifications_module_1 = require("./notifications/notifications.module");
 const audit_module_1 = require("./audit/audit.module");
+const core_1 = require("@nestjs/core");
+const ip_network_guard_1 = require("./common/guards/ip-network.guard");
+const events_module_1 = require("./events/events.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -30,6 +33,7 @@ exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             prisma_module_1.PrismaModule,
+            events_module_1.EventsModule,
             audit_module_1.AuditModule,
             auth_module_1.AuthModule,
             employees_module_1.EmployeesModule,
@@ -44,6 +48,12 @@ exports.AppModule = AppModule = __decorate([
             payroll_module_1.PayrollModule,
             reports_module_1.ReportsModule,
             notifications_module_1.NotificationsModule,
+        ],
+        providers: [
+            {
+                provide: core_1.APP_GUARD,
+                useClass: ip_network_guard_1.IpNetworkGuard,
+            },
         ],
     })
 ], AppModule);

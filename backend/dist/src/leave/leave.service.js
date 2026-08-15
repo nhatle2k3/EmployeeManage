@@ -13,9 +13,13 @@ exports.LeaveService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const client_1 = require("@prisma/client");
+const events_service_1 = require("../events/events.service");
+const notifications_service_1 = require("../notifications/notifications.service");
 let LeaveService = class LeaveService {
-    constructor(prisma) {
+    constructor(prisma, eventsService, notificationsService) {
         this.prisma = prisma;
+        this.eventsService = eventsService;
+        this.notificationsService = notificationsService;
     }
     async getLeaveTypes() {
         return this.prisma.leaveType.findMany({ orderBy: { code: 'asc' } });
@@ -68,6 +72,23 @@ let LeaveService = class LeaveService {
                 data: { pendingDays: balance.pendingDays + totalDays },
             });
         }
+        this.eventsService.emit('LEAVE_REQUEST', { request });
+        try {
+            const adminUsers = await this.prisma.user.findMany({
+                where: { role: { name: { in: ['SUPER_ADMIN', 'HR_ADMIN', 'MANAGER'] } } },
+            });
+            for (const admin of adminUsers) {
+                await this.notificationsService.create({
+                    userId: admin.id,
+                    title: 'Đề xuất nghỉ phép mới',
+                    message: `Nhân viên ${request.employee?.firstName} ${request.employee?.lastName} đã gửi đơn xin nghỉ phép ${request.totalDays} ngày.`,
+                    type: 'LEAVE_REQUEST',
+                    linkUrl: '/leave',
+                });
+            }
+        }
+        catch (e) {
+        }
         return request;
     }
     async findAllRequests(employeeId, status) {
@@ -89,7 +110,7 @@ let LeaveService = class LeaveService {
     async processRequest(userId, requestId, action, comment) {
         const request = await this.prisma.leaveRequest.findUnique({
             where: { id: requestId },
-            include: { leaveType: true },
+            include: { leaveType: true, employee: { include: { user: true } } },
         });
         if (!request)
             throw new common_1.NotFoundException('Leave request not found');
@@ -127,7 +148,7 @@ let LeaveService = class LeaveService {
                 });
             }
         }
-        return this.prisma.leaveRequest.update({
+        const updated = await this.prisma.leaveRequest.update({
             where: { id: requestId },
             data: {
                 status: newStatus,
@@ -136,11 +157,29 @@ let LeaveService = class LeaveService {
             },
             include: { leaveType: true, employee: true },
         });
+        this.eventsService.emit('LEAVE_PROCESSED', { request: updated });
+        if (request.employee?.user?.id) {
+            try {
+                const actionStr = action === 'APPROVE' ? 'ĐÃ ĐƯỢC DUYỆT' : 'ĐÃ BỊ TỪ CHỐI';
+                await this.notificationsService.create({
+                    userId: request.employee.user.id,
+                    title: `Đơn xin nghỉ phép ${actionStr}`,
+                    message: `Yêu cầu nghỉ phép ${request.leaveType.name} (${request.totalDays} ngày) của bạn ${actionStr.toLowerCase()}.`,
+                    type: 'LEAVE_PROCESSED',
+                    linkUrl: '/leave',
+                });
+            }
+            catch (e) {
+            }
+        }
+        return updated;
     }
 };
 exports.LeaveService = LeaveService;
 exports.LeaveService = LeaveService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        events_service_1.EventsService,
+        notifications_service_1.NotificationsService])
 ], LeaveService);
 //# sourceMappingURL=leave.service.js.map

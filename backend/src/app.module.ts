@@ -15,9 +15,15 @@ import { ReportsModule } from './reports/reports.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AuditModule } from './audit/audit.module';
 
+import { APP_GUARD } from '@nestjs/core';
+import { IpNetworkGuard } from './common/guards/ip-network.guard';
+
+import { EventsModule } from './events/events.module';
+
 @Module({
   imports: [
     PrismaModule,
+    EventsModule,
     AuditModule,
     AuthModule,
     EmployeesModule,
@@ -32,6 +38,12 @@ import { AuditModule } from './audit/audit.module';
     PayrollModule,
     ReportsModule,
     NotificationsModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: IpNetworkGuard,
+    },
   ],
 })
 export class AppModule {}

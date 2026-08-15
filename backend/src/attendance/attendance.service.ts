@@ -3,9 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { IpValidatorUtil } from '../common/utils/ip-validator.util';
 import { AttendanceStatus, AttendanceMethod, StatusWorkflow } from '@prisma/client';
 
+import { EventsService } from '../events/events.service';
+
 @Injectable()
 export class AttendanceService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventsService: EventsService,
+  ) {}
 
   /**
    * Validate if client IP is within an approved company CIDR network
@@ -89,8 +94,9 @@ export class AttendanceService {
       }
     }
 
+    let result: any;
     if (existingRecord) {
-      return this.prisma.attendanceRecord.update({
+      result = await this.prisma.attendanceRecord.update({
         where: { id: existingRecord.id },
         data: {
           checkInTime: now,
@@ -102,22 +108,25 @@ export class AttendanceService {
           remarks: body?.remarks,
         },
       });
+    } else {
+      result = await this.prisma.attendanceRecord.create({
+        data: {
+          employeeId,
+          date: todayDate,
+          checkInTime: now,
+          ipAddress: clientIp,
+          networkName,
+          deviceId: body?.deviceId,
+          deviceName: body?.deviceName,
+          method: AttendanceMethod.WEB,
+          status,
+          remarks: body?.remarks,
+        },
+      });
     }
 
-    return this.prisma.attendanceRecord.create({
-      data: {
-        employeeId,
-        date: todayDate,
-        checkInTime: now,
-        ipAddress: clientIp,
-        networkName,
-        deviceId: body?.deviceId,
-        deviceName: body?.deviceName,
-        method: AttendanceMethod.WEB,
-        status,
-        remarks: body?.remarks,
-      },
-    });
+    this.eventsService.emit('ATTENDANCE_CHECKIN', { employeeId, result });
+    return result;
   }
 
   async checkOut(employeeId: string, req: any, body?: { deviceId?: string; deviceName?: string; remarks?: string }) {
@@ -190,7 +199,7 @@ export class AttendanceService {
       }
     }
 
-    return this.prisma.attendanceRecord.update({
+    const updated = await this.prisma.attendanceRecord.update({
       where: { id: record.id },
       data: {
         checkOutTime: now,
@@ -200,6 +209,9 @@ export class AttendanceService {
         remarks: body?.remarks ? `${record.remarks || ''} | ${body.remarks}` : record.remarks,
       },
     });
+
+    this.eventsService.emit('ATTENDANCE_CHECKOUT', { employeeId, result: updated });
+    return updated;
   }
 
   async getMyTodayStatus(employeeId: string, req: any) {

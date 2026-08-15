@@ -102,17 +102,17 @@ export class EmployeesService {
         firstName: createDto.firstName,
         lastName: createDto.lastName,
         email: createDto.email,
-        phone: createDto.phone,
-        gender: createDto.gender,
+        phone: createDto.phone || null,
+        gender: createDto.gender || null,
         dob: createDto.dob ? new Date(createDto.dob) : null,
-        address: createDto.address,
-        nationalId: createDto.nationalId,
-        taxId: createDto.taxId,
-        bankAccount: createDto.bankAccount,
-        bankName: createDto.bankName,
-        departmentId: createDto.departmentId,
-        positionId: createDto.positionId,
-        managerId: createDto.managerId,
+        address: createDto.address || null,
+        nationalId: createDto.nationalId || null,
+        taxId: createDto.taxId || null,
+        bankAccount: createDto.bankAccount || null,
+        bankName: createDto.bankName || null,
+        departmentId: createDto.departmentId || null,
+        positionId: createDto.positionId || null,
+        managerId: createDto.managerId || null,
         hireDate: createDto.hireDate ? new Date(createDto.hireDate) : new Date(),
         status: createDto.status || 'ACTIVE',
         profile: {
@@ -127,8 +127,9 @@ export class EmployeesService {
       },
     });
 
-    // Automatically create User account with default role EMPLOYEE if not exists
-    const employeeRole = await this.prisma.role.findUnique({ where: { name: RoleEnum.EMPLOYEE } });
+    // Automatically create User account with selected role (default EMPLOYEE)
+    const targetRole = createDto.role || RoleEnum.EMPLOYEE;
+    const employeeRole = await this.prisma.role.findUnique({ where: { name: targetRole } });
     if (employeeRole) {
       const passwordHash = await bcrypt.hash('Password123!', 10);
       await this.prisma.user.create({

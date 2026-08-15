@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EventsService } from '../events/events.service';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventsService: EventsService,
+  ) {}
 
   async findMyNotifications(userId: string) {
     return this.prisma.notification.findMany({
@@ -28,6 +32,8 @@ export class NotificationsService {
   }
 
   async create(data: { userId: string; title: string; message: string; type: string; linkUrl?: string }) {
-    return this.prisma.notification.create({ data });
+    const notif = await this.prisma.notification.create({ data });
+    this.eventsService.emit('NOTIFICATION', notif);
+    return notif;
   }
 }

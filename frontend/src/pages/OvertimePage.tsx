@@ -6,8 +6,11 @@ import { Modal } from '../components/common/Modal';
 import { useAuth } from '../context/AuthContext';
 import { Clock, Plus, CheckCircle, XCircle } from 'lucide-react';
 
+import { useRealtime } from '../context/RealtimeContext';
+
 export const OvertimePage: React.FC = () => {
   const { user } = useAuth();
+  const { lastEvent } = useRealtime();
   const [records, setRecords] = useState<OvertimeRecord[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [otForm, setOtForm] = useState({
@@ -30,6 +33,12 @@ export const OvertimePage: React.FC = () => {
   useEffect(() => {
     fetchOvertime();
   }, []);
+
+  useEffect(() => {
+    if (lastEvent && (lastEvent.type === 'OVERTIME_REQUEST' || lastEvent.type === 'OVERTIME_PROCESSED' || lastEvent.type === 'NOTIFICATION')) {
+      fetchOvertime();
+    }
+  }, [lastEvent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

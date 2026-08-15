@@ -1,7 +1,9 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { EventsService } from '../events/events.service';
 export declare class AttendanceService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private eventsService;
+    constructor(prisma: PrismaService, eventsService: EventsService);
     validateNetworkIp(req: any): Promise<{
         clientIp: string;
         networkName: string;
@@ -11,25 +13,7 @@ export declare class AttendanceService {
         deviceId?: string;
         deviceName?: string;
         remarks?: string;
-    }): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        status: import(".prisma/client").$Enums.AttendanceStatus;
-        employeeId: string;
-        date: Date;
-        checkInTime: Date | null;
-        checkOutTime: Date | null;
-        ipAddress: string;
-        networkId: string | null;
-        networkName: string | null;
-        deviceId: string | null;
-        deviceName: string | null;
-        method: import(".prisma/client").$Enums.AttendanceMethod;
-        workingHours: number;
-        overtimeHours: number;
-        remarks: string | null;
-    }>;
+    }): Promise<any>;
     checkOut(employeeId: string, req: any, body?: {
         deviceId?: string;
         deviceName?: string;

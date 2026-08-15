@@ -5,7 +5,10 @@ import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { Users, Plus, Search, Filter, Edit, Eye, UserX, Mail, Phone, Building, Shield } from 'lucide-react';
 
+import { useRealtime } from '../context/RealtimeContext';
+
 export const EmployeesPage: React.FC = () => {
+  const { lastEvent } = useRealtime();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
@@ -53,14 +56,45 @@ export const EmployeesPage: React.FC = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (lastEvent) {
+      fetchData();
+    }
+  }, [lastEvent]);
+
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/employees', formData);
+      const payload: any = {};
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== '') {
+          payload[key] = value;
+        }
+      });
+
+      await api.post('/employees', payload);
       setIsModalOpen(false);
+      setFormData({
+        employeeCode: '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        nationalId: '',
+        taxId: '',
+        bankAccount: '',
+        bankName: '',
+        departmentId: '',
+        positionId: '',
+        hireDate: new Date().toISOString().split('T')[0],
+        role: 'EMPLOYEE',
+      });
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to create employee');
+      const msg = Array.isArray(err.response?.data?.message)
+        ? err.response.data.message.join(', ')
+        : err.response?.data?.message || 'Failed to create employee';
+      alert(msg);
     }
   };
 

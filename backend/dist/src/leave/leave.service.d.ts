@@ -1,8 +1,12 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { StatusWorkflow } from '@prisma/client';
+import { EventsService } from '../events/events.service';
+import { NotificationsService } from '../notifications/notifications.service';
 export declare class LeaveService {
     private prisma;
-    constructor(prisma: PrismaService);
+    private eventsService;
+    private notificationsService;
+    constructor(prisma: PrismaService, eventsService: EventsService, notificationsService: NotificationsService);
     getLeaveTypes(): Promise<{
         id: string;
         name: string;

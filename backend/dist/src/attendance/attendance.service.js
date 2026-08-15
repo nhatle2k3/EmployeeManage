@@ -14,9 +14,11 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const ip_validator_util_1 = require("../common/utils/ip-validator.util");
 const client_1 = require("@prisma/client");
+const events_service_1 = require("../events/events.service");
 let AttendanceService = class AttendanceService {
-    constructor(prisma) {
+    constructor(prisma, eventsService) {
         this.prisma = prisma;
+        this.eventsService = eventsService;
     }
     async validateNetworkIp(req) {
         const clientIp = ip_validator_util_1.IpValidatorUtil.extractClientIp(req);
@@ -75,8 +77,9 @@ let AttendanceService = class AttendanceService {
                 status = client_1.AttendanceStatus.LATE;
             }
         }
+        let result;
         if (existingRecord) {
-            return this.prisma.attendanceRecord.update({
+            result = await this.prisma.attendanceRecord.update({
                 where: { id: existingRecord.id },
                 data: {
                     checkInTime: now,
@@ -89,20 +92,24 @@ let AttendanceService = class AttendanceService {
                 },
             });
         }
-        return this.prisma.attendanceRecord.create({
-            data: {
-                employeeId,
-                date: todayDate,
-                checkInTime: now,
-                ipAddress: clientIp,
-                networkName,
-                deviceId: body?.deviceId,
-                deviceName: body?.deviceName,
-                method: client_1.AttendanceMethod.WEB,
-                status,
-                remarks: body?.remarks,
-            },
-        });
+        else {
+            result = await this.prisma.attendanceRecord.create({
+                data: {
+                    employeeId,
+                    date: todayDate,
+                    checkInTime: now,
+                    ipAddress: clientIp,
+                    networkName,
+                    deviceId: body?.deviceId,
+                    deviceName: body?.deviceName,
+                    method: client_1.AttendanceMethod.WEB,
+                    status,
+                    remarks: body?.remarks,
+                },
+            });
+        }
+        this.eventsService.emit('ATTENDANCE_CHECKIN', { employeeId, result });
+        return result;
     }
     async checkOut(employeeId, req, body) {
         if (!employeeId) {
@@ -159,7 +166,7 @@ let AttendanceService = class AttendanceService {
                 overtimeHours = parseFloat((otMs / (1000 * 60 * 60)).toFixed(2));
             }
         }
-        return this.prisma.attendanceRecord.update({
+        const updated = await this.prisma.attendanceRecord.update({
             where: { id: record.id },
             data: {
                 checkOutTime: now,
@@ -169,6 +176,8 @@ let AttendanceService = class AttendanceService {
                 remarks: body?.remarks ? `${record.remarks || ''} | ${body.remarks}` : record.remarks,
             },
         });
+        this.eventsService.emit('ATTENDANCE_CHECKOUT', { employeeId, result: updated });
+        return updated;
     }
     async getMyTodayStatus(employeeId, req) {
         const networkCheck = await this.validateNetworkIp(req);
@@ -254,6 +263,7 @@ let AttendanceService = class AttendanceService {
 exports.AttendanceService = AttendanceService;
 exports.AttendanceService = AttendanceService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        events_service_1.EventsService])
 ], AttendanceService);
 //# sourceMappingURL=attendance.service.js.map

@@ -2,9 +2,16 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { StatusWorkflow } from '@prisma/client';
 
+import { EventsService } from '../events/events.service';
+import { NotificationsService } from '../notifications/notifications.service';
+
 @Injectable()
 export class LeaveService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private eventsService: EventsService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   // Leave Types
   async getLeaveTypes() {
@@ -75,6 +82,27 @@ export class LeaveService {
       });
     }
 
+    // Emit real-time LEAVE_REQUEST event
+    this.eventsService.emit('LEAVE_REQUEST', { request });
+
+    // Notify Managers & HR
+    try {
+      const adminUsers = await this.prisma.user.findMany({
+        where: { role: { name: { in: ['SUPER_ADMIN', 'HR_ADMIN', 'MANAGER'] } } },
+      });
+      for (const admin of adminUsers) {
+        await this.notificationsService.create({
+          userId: admin.id,
+          title: 'Đề xuất nghỉ phép mới',
+          message: `Nhân viên ${request.employee?.firstName} ${request.employee?.lastName} đã gửi đơn xin nghỉ phép ${request.totalDays} ngày.`,
+          type: 'LEAVE_REQUEST',
+          linkUrl: '/leave',
+        });
+      }
+    } catch (e) {
+      // ignore async notify error
+    }
+
     return request;
   }
 
@@ -102,7 +130,7 @@ export class LeaveService {
   ) {
     const request = await this.prisma.leaveRequest.findUnique({
       where: { id: requestId },
-      include: { leaveType: true },
+      include: { leaveType: true, employee: { include: { user: true } } },
     });
 
     if (!request) throw new NotFoundException('Leave request not found');
@@ -144,7 +172,7 @@ export class LeaveService {
       }
     }
 
-    return this.prisma.leaveRequest.update({
+    const updated = await this.prisma.leaveRequest.update({
       where: { id: requestId },
       data: {
         status: newStatus,
@@ -153,5 +181,26 @@ export class LeaveService {
       },
       include: { leaveType: true, employee: true },
     });
+
+    // Emit real-time event for leave processing
+    this.eventsService.emit('LEAVE_PROCESSED', { request: updated });
+
+    // Notify employee user
+    if (request.employee?.user?.id) {
+      try {
+        const actionStr = action === 'APPROVE' ? 'ĐÃ ĐƯỢC DUYỆT' : 'ĐÃ BỊ TỪ CHỐI';
+        await this.notificationsService.create({
+          userId: request.employee.user.id,
+          title: `Đơn xin nghỉ phép ${actionStr}`,
+          message: `Yêu cầu nghỉ phép ${request.leaveType.name} (${request.totalDays} ngày) của bạn ${actionStr.toLowerCase()}.`,
+          type: 'LEAVE_PROCESSED',
+          linkUrl: '/leave',
+        });
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    return updated;
   }
 }

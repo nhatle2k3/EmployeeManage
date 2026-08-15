@@ -1,15 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { ToastContainer } from '../common/ToastContainer';
 
 export const MainLayout: React.FC = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100">
-      <Sidebar />
+    <div className="flex min-h-screen bg-slate-950 text-slate-100 relative overflow-x-hidden">
+      <ToastContainer />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
-        <Header />
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        <Header onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)} />
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
           <Outlet />
         </main>
       </div>

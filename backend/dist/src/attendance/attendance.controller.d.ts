@@ -44,25 +44,7 @@ export declare class AttendanceController {
         };
         currentTime: string;
     }>;
-    checkIn(employeeId: string, req: any, body: CheckInOutDto): Promise<{
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        status: import(".prisma/client").$Enums.AttendanceStatus;
-        employeeId: string;
-        date: Date;
-        checkInTime: Date | null;
-        checkOutTime: Date | null;
-        ipAddress: string;
-        networkId: string | null;
-        networkName: string | null;
-        deviceId: string | null;
-        deviceName: string | null;
-        method: import(".prisma/client").$Enums.AttendanceMethod;
-        workingHours: number;
-        overtimeHours: number;
-        remarks: string | null;
-    }>;
+    checkIn(employeeId: string, req: any, body: CheckInOutDto): Promise<any>;
     checkOut(employeeId: string, req: any, body: CheckInOutDto): Promise<{
         id: string;
         createdAt: Date;

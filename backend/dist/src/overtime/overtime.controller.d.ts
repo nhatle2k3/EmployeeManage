@@ -10,6 +10,29 @@ export declare class OvertimeController {
         hours: number;
         reason: string;
     }): Promise<{
+        employee: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            managerId: string | null;
+            departmentId: string | null;
+            employeeCode: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+            phone: string | null;
+            gender: string | null;
+            dob: Date | null;
+            address: string | null;
+            nationalId: string | null;
+            taxId: string | null;
+            bankAccount: string | null;
+            bankName: string | null;
+            hireDate: Date;
+            status: import(".prisma/client").$Enums.EmploymentStatus;
+            positionId: string | null;
+        };
+    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
